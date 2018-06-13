@@ -12,7 +12,21 @@ class ItemsViewController : UITableViewController {
     
     var itemStore: ItemStore!
 
-    @IBAction func addNewItem(_ sender: UIButton) {
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 65
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        tableView.reloadData()
+    }
+    
+    @IBAction func addNewItem(_ sender: UIBarButtonItem) {
         
         /// Create new item and add into store
         let newItem = itemStore.createItem()
@@ -24,29 +38,15 @@ class ItemsViewController : UITableViewController {
             /// Insert this new row into table
             tableView.insertRows(at: [indexPath], with: .automatic)
         }
-        
-        
-        
     }
     
-    @IBAction func toggleEditingMode(_ sender : UIButton) {
-        if isEditing {
-            
-            /// Change text of button
-            sender.setTitle("Edit", for: .normal)
-            
-            /// Turn off editing mode
-            setEditing(false, animated: true)
-        } else {
-            /// Change text fo button to inform user of state
-            sender.setTitle("Done", for: .normal)
-            
-            /// Enter editing mode
-            setEditing(true, animated: true)
-            
-        }
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
         
+        navigationItem.leftBarButtonItem = editButtonItem
     }
+    
+    
     
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         itemStore.moveItem(from: sourceIndexPath.row, to: destinationIndexPath.row)
@@ -69,15 +69,31 @@ class ItemsViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemStore.allItems.count
     }
+    
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "UITableViewCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell", for: indexPath) as! ItemCell
         
         let item = itemStore.allItems[indexPath.row]
         
-        cell.textLabel?.text = item.name
-        cell.detailTextLabel?.text = "$\(item.valueInDollars)"
+        cell.nameLabel?.text = item.name
+        cell.serialNumberLabel.text = item.serialNumber
+        cell.valueLabel?.text = "$\(item.valueInDollars)"
         return cell 
         
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        switch segue.identifier {
+        case "showItem"?:
+            if let row = tableView.indexPathForSelectedRow?.row {
+                
+                let item = itemStore.allItems[row]
+                let detailViewController = segue.destination as! DetailViewContoller
+                detailViewController.item = item
+            }
+        default: preconditionFailure("Unexpected segue identifier")
+        }
     }
     
 }
